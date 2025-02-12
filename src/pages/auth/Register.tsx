@@ -17,11 +17,23 @@ const Register = () => {
     fullName: "",
   });
 
-  // Email validation regex
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  // More strict email validation regex that requires longer TLDs
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9][a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
   const validateEmail = (email: string) => {
-    return emailRegex.test(email);
+    // Basic format check
+    if (!emailRegex.test(email)) return false;
+    
+    // Additional validation for domain
+    const [, domain] = email.split('@');
+    if (!domain) return false;
+    
+    // Check domain length and format
+    const parts = domain.split('.');
+    if (parts.length < 2) return false;
+    
+    // Ensure domain parts are valid
+    return parts.every(part => part.length >= 2);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,7 +44,7 @@ const Register = () => {
       toast({
         variant: "destructive",
         title: "Invalid email",
-        description: "Please enter a valid email address.",
+        description: "Please enter a valid email address with a proper domain (e.g., example@domain.com)",
       });
       return;
     }
@@ -117,8 +129,8 @@ const Register = () => {
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
-            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
-            title="Please enter a valid email address"
+            pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9][a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+            title="Please enter a valid email address (e.g., you@example.com)"
           />
         </div>
 
