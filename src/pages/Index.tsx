@@ -9,9 +9,20 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
 
+interface Hackathon {
+  id: string;
+  name: string;
+  date: string;
+  location: string;
+  max_participants: number;
+  current_participants: number;
+  description: string;
+  status: string;
+}
+
 const Index = () => {
-  const [hackathons, setHackathons] = useState([]);
-  const [filteredHackathons, setFilteredHackathons] = useState([]);
+  const [hackathons, setHackathons] = useState<Hackathon[]>([]);
+  const [filteredHackathons, setFilteredHackathons] = useState<Hackathon[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedSkillLevel, setSelectedSkillLevel] = useState('all');
@@ -26,7 +37,7 @@ const Index = () => {
     name: '',
     date: '',
     location: '',
-    maxParticipants: '',
+    max_participants: '',
     description: '',
   });
 
@@ -37,22 +48,22 @@ const Index = () => {
     setTimeout(() => {
       setHackathons([
         {
-          id: 1,
+          id: '1',
           name: 'AI Innovation Challenge',
           date: '2025-02-15',
           location: 'Online',
-          maxParticipants: 200,
-          currentParticipants: 150,
+          max_participants: 200,
+          current_participants: 150,
           description: 'Join us for an exciting hackathon focused on artificial intelligence and machine learning innovations.',
           status: 'upcoming',
         },
         {
-          id: 2,
+          id: '2',
           name: 'Blockchain Summit 2025',
           date: '2025-01-30',
           location: 'Mumbai',
-          maxParticipants: 100,
-          currentParticipants: 90,
+          max_participants: 100,
+          current_participants: 90,
           description: 'Build the future of Web3 with innovative blockchain solutions.',
           status: 'ongoing',
         },
@@ -96,7 +107,7 @@ const Index = () => {
     const newHackathonWithId = {
       id: hackathons.length + 1,
       ...newHackathon,
-      currentParticipants: 0,
+      current_participants: 0,
       status: 'upcoming',
     };
     setHackathons([...hackathons, newHackathonWithId]);
@@ -108,7 +119,7 @@ const Index = () => {
     });
   };
 
-  const handleDeleteHackathon = (id: number) => {
+  const handleDeleteHackathon = (id: string) => {
     setHackathons(hackathons.filter((hackathon) => hackathon.id !== id));
     toast({
       title: "Deleted",
@@ -200,8 +211,8 @@ const Index = () => {
               <label className="text-sm font-medium">Max Participants</label>
               <Input
                 type="number"
-                value={newHackathon.maxParticipants}
-                onChange={(e) => setNewHackathon({ ...newHackathon, maxParticipants: e.target.value })}
+                value={newHackathon.max_participants}
+                onChange={(e) => setNewHackathon({ ...newHackathon, max_participants: e.target.value })}
               />
             </div>
             <div className="space-y-2">
