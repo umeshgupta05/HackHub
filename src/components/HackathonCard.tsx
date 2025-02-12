@@ -13,16 +13,16 @@ import { Badge } from './ui/badge';
 
 interface HackathonCardProps {
   hackathon: {
-    id: number;
+    id: string;
     name: string;
     date: string;
     location: string;
-    maxParticipants: number;
-    currentParticipants: number;
+    max_participants: number;
+    current_participants: number;
     description: string;
     status: string;
   };
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
 }
 
 const HackathonCard = ({ hackathon, onDelete }: HackathonCardProps) => {
@@ -54,7 +54,7 @@ const HackathonCard = ({ hackathon, onDelete }: HackathonCardProps) => {
           </div>
           <div className="flex items-center text-gray-600">
             <Users className="h-4 w-4 mr-2" />
-            <span>{hackathon.currentParticipants}/{hackathon.maxParticipants} Participants</span>
+            <span>{hackathon.current_participants}/{hackathon.max_participants} Participants</span>
           </div>
         </div>
         <p className="text-gray-600 line-clamp-2">{hackathon.description}</p>

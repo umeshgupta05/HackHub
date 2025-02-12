@@ -126,7 +126,7 @@ const Dashboard = () => {
     }
   };
 
-  const handleDeleteHackathon = async (id: number) => {
+  const handleDeleteHackathon = async (id: string) => {
     try {
       const { error } = await supabase
         .from("hackathons")
