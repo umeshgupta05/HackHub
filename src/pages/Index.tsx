@@ -1,12 +1,177 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useState, useEffect } from 'react';
+import Navigation from '@/components/Navigation';
+import Filters from '@/components/Filters';
+import HackathonCard from '@/components/HackathonCard';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/components/ui/use-toast';
+import { Loader2 } from 'lucide-react';
 
 const Index = () => {
+  const [hackathons, setHackathons] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedSkillLevel, setSelectedSkillLevel] = useState('all');
+  const [formOpen, setFormOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState([
+    { id: 1, message: 'Registration deadline for Web3 Hackathon approaching' },
+    { id: 2, message: 'New team request from John Doe' },
+  ]);
+  const [newHackathon, setNewHackathon] = useState({
+    name: '',
+    date: '',
+    location: '',
+    maxParticipants: '',
+    description: '',
+  });
+
+  const { toast } = useToast();
+  const skillLevels = ['Beginner', 'Intermediate', 'Advanced', 'All Levels'];
+
+  useEffect(() => {
+    setTimeout(() => {
+      setHackathons([
+        {
+          id: 1,
+          name: 'AI Innovation Challenge',
+          date: '2025-02-15',
+          location: 'Online',
+          maxParticipants: 200,
+          currentParticipants: 150,
+          description: 'Join us for an exciting hackathon focused on artificial intelligence and machine learning innovations.',
+          status: 'upcoming',
+        },
+        {
+          id: 2,
+          name: 'Blockchain Summit 2025',
+          date: '2025-01-30',
+          location: 'Mumbai',
+          maxParticipants: 100,
+          currentParticipants: 90,
+          description: 'Build the future of Web3 with innovative blockchain solutions.',
+          status: 'ongoing',
+        },
+      ]);
+      setLoading(false);
+    }, 1000);
+  }, []);
+
+  const handleFormSubmit = () => {
+    const newHackathonWithId = {
+      id: hackathons.length + 1,
+      ...newHackathon,
+      currentParticipants: 0,
+      status: 'upcoming',
+    };
+    setHackathons([...hackathons, newHackathonWithId]);
+    setFormOpen(false);
+    toast({
+      title: "Success",
+      description: "Hackathon added successfully!",
+      duration: 3000,
+    });
+  };
+
+  const handleDeleteHackathon = (id: number) => {
+    setHackathons(hackathons.filter((hackathon) => hackathon.id !== id));
+    toast({
+      title: "Deleted",
+      description: "Hackathon has been removed",
+      duration: 3000,
+    });
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <Navigation
+        onAddHackathon={() => setFormOpen(true)}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        notifications={notifications}
+      />
+
+      <main className="max-w-7xl mx-auto pt-20 px-4 sm:px-6 lg:px-8">
+        <Filters
+          selectedStatus={selectedStatus}
+          selectedSkillLevel={selectedSkillLevel}
+          onStatusChange={setSelectedStatus}
+          onSkillLevelChange={setSelectedSkillLevel}
+          skillLevels={skillLevels}
+        />
+
+        {loading ? (
+          <div className="flex justify-center items-center min-h-[400px]">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 py-8">
+            {hackathons.map((hackathon) => (
+              <HackathonCard
+                key={hackathon.id}
+                hackathon={hackathon}
+                onDelete={handleDeleteHackathon}
+              />
+            ))}
+          </div>
+        )}
+      </main>
+
+      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add New Hackathon</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Name</label>
+              <Input
+                value={newHackathon.name}
+                onChange={(e) => setNewHackathon({ ...newHackathon, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Date</label>
+              <Input
+                type="date"
+                value={newHackathon.date}
+                onChange={(e) => setNewHackathon({ ...newHackathon, date: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Location</label>
+              <Input
+                value={newHackathon.location}
+                onChange={(e) => setNewHackathon({ ...newHackathon, location: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Max Participants</label>
+              <Input
+                type="number"
+                value={newHackathon.maxParticipants}
+                onChange={(e) => setNewHackathon({ ...newHackathon, maxParticipants: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Description</label>
+              <Textarea
+                value={newHackathon.description}
+                onChange={(e) => setNewHackathon({ ...newHackathon, description: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setFormOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleFormSubmit}>Submit</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
