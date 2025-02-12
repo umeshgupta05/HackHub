@@ -17,8 +17,26 @@ const Register = () => {
     fullName: "",
   });
 
+  // Email validation regex
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+  const validateEmail = (email: string) => {
+    return emailRegex.test(email);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate email before submitting
+    if (!validateEmail(formData.email)) {
+      toast({
+        variant: "destructive",
+        title: "Invalid email",
+        description: "Please enter a valid email address.",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -99,6 +117,8 @@ const Register = () => {
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
+            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+            title="Please enter a valid email address"
           />
         </div>
 
