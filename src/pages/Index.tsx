@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import Filters from '@/components/Filters';
@@ -12,9 +11,11 @@ import { Loader2 } from 'lucide-react';
 
 const Index = () => {
   const [hackathons, setHackathons] = useState([]);
+  const [filteredHackathons, setFilteredHackathons] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedSkillLevel, setSelectedSkillLevel] = useState('all');
+  const [selectedDate, setSelectedDate] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([
@@ -60,6 +61,37 @@ const Index = () => {
     }, 1000);
   }, []);
 
+  useEffect(() => {
+    let filtered = [...hackathons];
+
+    // Apply status filter
+    if (selectedStatus !== 'all') {
+      filtered = filtered.filter(
+        hackathon => hackathon.status === selectedStatus
+      );
+    }
+
+    // Apply date filter
+    if (selectedDate) {
+      filtered = filtered.filter(
+        hackathon => hackathon.date === selectedDate
+      );
+    }
+
+    // Apply search term
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        hackathon =>
+          hackathon.name.toLowerCase().includes(searchLower) ||
+          hackathon.description.toLowerCase().includes(searchLower) ||
+          hackathon.location.toLowerCase().includes(searchLower)
+      );
+    }
+
+    setFilteredHackathons(filtered);
+  }, [hackathons, selectedStatus, selectedDate, searchTerm]);
+
   const handleFormSubmit = () => {
     const newHackathonWithId = {
       id: hackathons.length + 1,
@@ -102,21 +134,37 @@ const Index = () => {
           onSkillLevelChange={setSelectedSkillLevel}
           skillLevels={skillLevels}
         />
+        <div className="w-full md:w-auto">
+          <Input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="w-full md:w-auto"
+          />
+        </div>
 
         {loading ? (
           <div className="flex justify-center items-center min-h-[400px]">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 py-8">
-            {hackathons.map((hackathon) => (
-              <HackathonCard
-                key={hackathon.id}
-                hackathon={hackathon}
-                onDelete={handleDeleteHackathon}
-              />
-            ))}
-          </div>
+          <>
+            {filteredHackathons.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">No hackathons found matching your criteria.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 py-8">
+                {filteredHackathons.map((hackathon) => (
+                  <HackathonCard
+                    key={hackathon.id}
+                    hackathon={hackathon}
+                    onDelete={handleDeleteHackathon}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </main>
 
