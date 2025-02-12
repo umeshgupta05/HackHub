@@ -1,74 +1,94 @@
 
-import React from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useToast } from '@/components/ui/use-toast';
-import AuthLayout from './AuthLayout';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import AuthLayout from "./AuthLayout";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  
-  const handleLogin = async (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement Supabase authentication
-    toast({
-      title: "Notice",
-      description: "Please connect to Supabase to enable authentication.",
-      duration: 5000,
-    });
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully logged in.",
+      });
+      
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: error.message,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <AuthLayout 
-      title="Welcome Back!"
-      subtitle="Login to access your dashboard"
+      title="Welcome Back" 
+      subtitle="Sign in to your account"
     >
-      <form onSubmit={handleLogin} className="space-y-4">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
           <Input
+            id="email"
             type="email"
-            placeholder="Email"
-            className="w-full"
+            placeholder="you@example.com"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
           />
-        </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Input
-            type="password"
-            placeholder="Password"
-            className="w-full"
-            required
-          />
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="flex items-center justify-between"
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder="••••••••"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            required
+          />
+        </div>
+
+        <Button 
+          type="submit" 
+          className="w-full"
+          disabled={loading}
         >
-          <Link 
-            to="/auth/register"
-            className="text-sm text-gray-600 hover:text-primary transition-colors"
-          >
-            Don't have an account?
+          {loading ? "Signing in..." : "Sign in"}
+        </Button>
+
+        <p className="text-center text-sm text-gray-600">
+          Don't have an account?{" "}
+          <Link to="/auth/register" className="text-primary hover:underline">
+            Sign up
           </Link>
-          <Button type="submit">
-            Login
-          </Button>
-        </motion.div>
+        </p>
       </form>
     </AuthLayout>
   );
