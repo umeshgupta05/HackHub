@@ -1,87 +1,134 @@
 
-import React from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useToast } from '@/components/ui/use-toast';
-import AuthLayout from './AuthLayout';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import AuthLayout from "./AuthLayout";
 
 const Register = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  
-  const handleRegister = async (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    fullName: "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement Supabase authentication
-    toast({
-      title: "Notice",
-      description: "Please connect to Supabase to enable authentication.",
-      duration: 5000,
-    });
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.fullName,
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.user?.identities?.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "Registration failed",
+          description: "An account with this email already exists.",
+        });
+        return;
+      }
+
+      toast({
+        title: "Registration successful!",
+        description: "Please check your email to verify your account before logging in.",
+        duration: 6000,
+      });
+      
+      // Clear the form
+      setFormData({
+        email: "",
+        password: "",
+        fullName: "",
+      });
+      
+      // Navigate to login page after a short delay
+      setTimeout(() => {
+        navigate("/auth/login");
+      }, 2000);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Registration failed",
+        description: error.message,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <AuthLayout 
-      title="Create Account"
-      subtitle="Join our community of innovators"
+      title="Create an Account" 
+      subtitle="Join our community and start collaborating"
     >
-      <form onSubmit={handleRegister} className="space-y-4">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="fullName">Full Name</Label>
           <Input
+            id="fullName"
             type="text"
-            placeholder="Full Name"
-            className="w-full"
+            placeholder="John Doe"
+            value={formData.fullName}
+            onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
             required
+            minLength={3}
           />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Input
-            type="email"
-            placeholder="Email"
-            className="w-full"
-            required
-          />
-        </motion.div>
+        </div>
         
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
           <Input
-            type="password"
-            placeholder="Password"
-            className="w-full"
+            id="email"
+            type="email"
+            placeholder="you@example.com"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
           />
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="flex items-center justify-between"
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder="••••••••"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            required
+            minLength={6}
+          />
+        </div>
+
+        <Button 
+          type="submit" 
+          className="w-full"
+          disabled={loading}
         >
-          <Link 
-            to="/auth/login"
-            className="text-sm text-gray-600 hover:text-primary transition-colors"
-          >
-            Already have an account?
+          {loading ? "Creating account..." : "Create account"}
+        </Button>
+
+        <p className="text-center text-sm text-gray-600">
+          Already have an account?{" "}
+          <Link to="/auth/login" className="text-primary hover:underline">
+            Sign in
           </Link>
-          <Button type="submit">
-            Register
-          </Button>
-        </motion.div>
+        </p>
       </form>
     </AuthLayout>
   );
