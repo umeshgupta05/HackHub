@@ -1,18 +1,41 @@
 
+import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import NotFound from "./pages/NotFound";
+import Dashboard from "./pages/Dashboard";
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  const isAuthenticated = false; // TODO: Replace with Supabase auth check
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    // Check current auth status
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (isAuthenticated === null) {
+    return null; // or loading spinner
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -21,11 +44,34 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={
-              isAuthenticated ? <Index /> : <Navigate to="/auth/login" />
-            } />
-            <Route path="/auth/login" element={<Login />} />
-            <Route path="/auth/register" element={<Register />} />
+            <Route
+              path="/"
+              element={
+                isAuthenticated ? (
+                  <Navigate to="/dashboard" />
+                ) : (
+                  <Navigate to="/auth/login" />
+                )
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                isAuthenticated ? <Dashboard /> : <Navigate to="/auth/login" />
+              }
+            />
+            <Route
+              path="/auth/login"
+              element={
+                !isAuthenticated ? <Login /> : <Navigate to="/dashboard" />
+              }
+            />
+            <Route
+              path="/auth/register"
+              element={
+                !isAuthenticated ? <Register /> : <Navigate to="/dashboard" />
+              }
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

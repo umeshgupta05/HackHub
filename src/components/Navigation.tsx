@@ -9,12 +9,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 interface NavigationProps {
   onAddHackathon: () => void;
   searchTerm: string;
   onSearchChange: (value: string) => void;
   notifications: Array<{ id: number; message: string }>;
+  userProfile?: {
+    full_name: string;
+  };
 }
 
 const Navigation = ({
@@ -22,7 +27,15 @@ const Navigation = ({
   searchTerm,
   onSearchChange,
   notifications,
+  userProfile,
 }: NavigationProps) => {
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/auth/login');
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -76,9 +89,21 @@ const Navigation = ({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button variant="ghost" size="icon">
-              <User className="h-5 w-5 text-gray-600 hover:text-gray-900 transition-colors" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <Button variant="ghost" size="icon">
+                  <User className="h-5 w-5 text-gray-600 hover:text-gray-900 transition-colors" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem className="font-medium">
+                  {userProfile?.full_name || 'User Profile'}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

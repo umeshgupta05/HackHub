@@ -9,6 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      hackathons: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          current_participants: number | null
+          date: string
+          description: string
+          id: string
+          location: string
+          max_participants: number
+          name: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          current_participants?: number | null
+          date: string
+          description: string
+          id?: string
+          location: string
+          max_participants: number
+          name: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          current_participants?: number | null
+          date?: string
+          description?: string
+          id?: string
+          location?: string
+          max_participants?: number
+          name?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           full_name: string | null
