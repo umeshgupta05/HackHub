@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Calendar, MapPin, Users, Trash2 } from 'lucide-react';
+import { Calendar, MapPin, Users, Trash2, Link as LinkIcon } from 'lucide-react';
 import { Button } from './ui/button';
 import {
   Card,
@@ -21,6 +20,8 @@ interface HackathonCardProps {
     current_participants: number;
     description: string;
     status: string;
+    image_url?: string;
+    website_url?: string;
   };
   onDelete: (id: string) => void;
 }
@@ -34,9 +35,30 @@ const HackathonCard = ({ hackathon, onDelete }: HackathonCardProps) => {
 
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 animate-scale-in h-full flex flex-col">
+      {hackathon.image_url && (
+        <div className="relative w-full h-48 overflow-hidden rounded-t-lg">
+          <img
+            src={hackathon.image_url}
+            alt={hackathon.name}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        </div>
+      )}
       <CardHeader>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-          <CardTitle className="text-lg sm:text-xl font-bold line-clamp-2">{hackathon.name}</CardTitle>
+          <CardTitle className="text-lg sm:text-xl font-bold line-clamp-2">
+            {hackathon.name}
+            {hackathon.website_url && (
+              <a
+                href={hackathon.website_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center ml-2 text-sm text-blue-600 hover:text-blue-800"
+              >
+                <LinkIcon className="h-4 w-4" />
+              </a>
+            )}
+          </CardTitle>
           <Badge variant="secondary" className={`${statusColors[hackathon.status as keyof typeof statusColors]} whitespace-nowrap`}>
             {hackathon.status}
           </Badge>

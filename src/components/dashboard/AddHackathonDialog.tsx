@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { Upload } from "lucide-react";
 
 interface AddHackathonDialogProps {
   open: boolean;
@@ -29,6 +29,8 @@ interface NewHackathon {
   registrationDeadline: string;
   prizePool: string;
   technologies: string;
+  imageFile: File | null;
+  websiteUrl: string;
 }
 
 export const AddHackathonDialog = ({ open, onOpenChange, onHackathonAdded }: AddHackathonDialogProps) => {
@@ -48,7 +50,10 @@ export const AddHackathonDialog = ({ open, onOpenChange, onHackathonAdded }: Add
     registrationDeadline: "",
     prizePool: "",
     technologies: "",
+    imageFile: null,
+    websiteUrl: "",
   });
+  const [imagePreview, setImagePreview] = useState<string>("");
 
   const validateForm = () => {
     const requiredFields = [
@@ -80,12 +85,42 @@ export const AddHackathonDialog = ({ open, onOpenChange, onHackathonAdded }: Add
     return true;
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNewHackathon({ ...newHackathon, imageFile: file });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleFormSubmit = async () => {
     if (!validateForm()) return;
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      let imageUrl = "";
+      if (newHackathon.imageFile) {
+        const fileExt = newHackathon.imageFile.name.split('.').pop();
+        const filePath = `${crypto.randomUUID()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('hackathon-images')
+          .upload(filePath, newHackathon.imageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage
+          .from('hackathon-images')
+          .getPublicUrl(filePath);
+
+        imageUrl = data.publicUrl;
+      }
 
       const { error } = await supabase.from("hackathons").insert([{
         name: newHackathon.name,
@@ -104,6 +139,8 @@ export const AddHackathonDialog = ({ open, onOpenChange, onHackathonAdded }: Add
         registration_deadline: newHackathon.registrationDeadline,
         prize_pool: parseFloat(newHackathon.prizePool) || 0,
         technologies: newHackathon.technologies.split(",").map(t => t.trim()).filter(t => t),
+        image_url: imageUrl,
+        website_url: newHackathon.websiteUrl,
       }]);
 
       if (error) throw error;
@@ -133,6 +170,8 @@ export const AddHackathonDialog = ({ open, onOpenChange, onHackathonAdded }: Add
         registrationDeadline: "",
         prizePool: "",
         technologies: "",
+        imageFile: null,
+        websiteUrl: "",
       });
     } catch (error: any) {
       toast({
@@ -276,6 +315,46 @@ export const AddHackathonDialog = ({ open, onOpenChange, onHackathonAdded }: Add
               onChange={(e) => setNewHackathon({ ...newHackathon, technologies: e.target.value })}
               placeholder="React, Node.js, Python, etc."
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Website URL</label>
+            <Input
+              type="url"
+              value={newHackathon.websiteUrl}
+              onChange={(e) => setNewHackathon({ ...newHackathon, websiteUrl: e.target.value })}
+              placeholder="https://example.com"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Event Image</label>
+              <div className="flex items-center space-x-4">
+                <div className="flex-1">
+                  <label 
+                    className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50"
+                  >
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                    />
+                    <Upload className="h-4 w-4 mr-2" />
+                    Choose Image
+                  </label>
+                </div>
+                {imagePreview && (
+                  <div className="h-16 w-16 relative">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="h-full w-full object-cover rounded-md"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">
