@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import Filters from '@/components/Filters';
@@ -29,9 +30,9 @@ const Index = () => {
   const [selectedDate, setSelectedDate] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [notifications, setNotifications] = useState([
-    { id: 1, message: 'Registration deadline for Web3 Hackathon approaching' },
-    { id: 2, message: 'New team request from John Doe' },
+  const [notifications] = useState([
+    { id: "1", message: 'Registration deadline for Web3 Hackathon approaching' },
+    { id: "2", message: 'New team request from John Doe' },
   ]);
   const [newHackathon, setNewHackathon] = useState({
     name: '',
@@ -48,7 +49,7 @@ const Index = () => {
     setTimeout(() => {
       setHackathons([
         {
-          id: '1',
+          id: "1",
           name: 'AI Innovation Challenge',
           date: '2025-02-15',
           location: 'Online',
@@ -58,7 +59,7 @@ const Index = () => {
           status: 'upcoming',
         },
         {
-          id: '2',
+          id: "2",
           name: 'Blockchain Summit 2025',
           date: '2025-01-30',
           location: 'Mumbai',
@@ -75,21 +76,18 @@ const Index = () => {
   useEffect(() => {
     let filtered = [...hackathons];
 
-    // Apply status filter
     if (selectedStatus !== 'all') {
       filtered = filtered.filter(
         hackathon => hackathon.status === selectedStatus
       );
     }
 
-    // Apply date filter
     if (selectedDate) {
       filtered = filtered.filter(
         hackathon => hackathon.date === selectedDate
       );
     }
 
-    // Apply search term
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(
@@ -104,10 +102,14 @@ const Index = () => {
   }, [hackathons, selectedStatus, selectedDate, searchTerm]);
 
   const handleFormSubmit = () => {
-    const newHackathonWithId = {
-      id: hackathons.length + 1,
-      ...newHackathon,
+    const newHackathonWithId: Hackathon = {
+      id: `${hackathons.length + 1}`,
+      name: newHackathon.name,
+      date: newHackathon.date,
+      location: newHackathon.location,
+      max_participants: parseInt(newHackathon.max_participants),
       current_participants: 0,
+      description: newHackathon.description,
       status: 'upcoming',
     };
     setHackathons([...hackathons, newHackathonWithId]);
