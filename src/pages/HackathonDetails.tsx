@@ -11,7 +11,7 @@ import {
   Link as LinkIcon,
   Twitter,
   Linkedin,
-  WhatsApp,
+  MessageSquare,
   Copy,
   Globe,
 } from 'lucide-react';
@@ -43,19 +43,24 @@ const HackathonDetails = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('hackathons')
-        .select(`
-          *,
-          hackathon_comments (
-            id,
-            comment,
-            created_at,
-            profiles (
-              full_name
-            )
-          )
-        `)
+        .select('*, profiles!hackathons_created_by_fkey(full_name)')
         .eq('id', id)
         .single();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch comments separately
+  const { data: comments = [] } = useQuery({
+    queryKey: ['hackathon-comments', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('hackathon_comments')
+        .select('*, profiles(full_name)')
+        .eq('hackathon_id', id)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data;
@@ -83,9 +88,6 @@ const HackathonDetails = () => {
         break;
       case 'linkedin':
         shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
-        break;
-      case 'whatsapp':
-        shareUrl = `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`;
         break;
       case 'copy':
         navigator.clipboard.writeText(url);
@@ -123,11 +125,11 @@ const HackathonDetails = () => {
 
     const { error } = await supabase
       .from('hackathon_comments')
-      .insert([{
+      .insert({
         hackathon_id: id,
         user_id: user.id,
         comment,
-      }]);
+      });
 
     if (error) {
       toast({
@@ -222,28 +224,50 @@ const HackathonDetails = () => {
                   <h3 className="text-lg font-semibold">Description</h3>
                   <p className="text-gray-600">{hackathon.description}</p>
                   
-                  <h3 className="text-lg font-semibold mt-4">Prize Pool</h3>
-                  <p className="text-gray-600">${hackathon.prize_pool}</p>
+                  {hackathon.prize_pool && (
+                    <>
+                      <h3 className="text-lg font-semibold mt-4">Prize Pool</h3>
+                      <p className="text-gray-600">${hackathon.prize_pool}</p>
+                    </>
+                  )}
                   
-                  <h3 className="text-lg font-semibold mt-4">Team Size</h3>
-                  <p className="text-gray-600">{hackathon.team_size_min} - {hackathon.team_size_max} members</p>
+                  {(hackathon.team_size_min || hackathon.team_size_max) && (
+                    <>
+                      <h3 className="text-lg font-semibold mt-4">Team Size</h3>
+                      <p className="text-gray-600">
+                        {hackathon.team_size_min || 1} - {hackathon.team_size_max || 'Any'} members
+                      </p>
+                    </>
+                  )}
                   
-                  <h3 className="text-lg font-semibold mt-4">Technologies</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {hackathon.technologies?.map((tech: string) => (
-                      <Badge key={tech} variant="secondary">{tech}</Badge>
-                    ))}
-                  </div>
+                  {hackathon.technologies && (
+                    <>
+                      <h3 className="text-lg font-semibold mt-4">Technologies</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {hackathon.technologies.map((tech: string) => (
+                          <Badge key={tech} variant="secondary">{tech}</Badge>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               </TabsContent>
               
               <TabsContent value="rules" className="space-y-4">
                 <div className="prose max-w-none">
-                  <h3 className="text-lg font-semibold">Eligibility Criteria</h3>
-                  <p className="text-gray-600">{hackathon.eligibility_criteria}</p>
+                  {hackathon.eligibility_criteria && (
+                    <>
+                      <h3 className="text-lg font-semibold">Eligibility Criteria</h3>
+                      <p className="text-gray-600">{hackathon.eligibility_criteria}</p>
+                    </>
+                  )}
                   
-                  <h3 className="text-lg font-semibold mt-4">Rules</h3>
-                  <p className="text-gray-600">{hackathon.rules}</p>
+                  {hackathon.rules && (
+                    <>
+                      <h3 className="text-lg font-semibold mt-4">Rules</h3>
+                      <p className="text-gray-600">{hackathon.rules}</p>
+                    </>
+                  )}
                 </div>
               </TabsContent>
               
@@ -259,11 +283,11 @@ const HackathonDetails = () => {
                   </div>
                   
                   <div className="space-y-4">
-                    {hackathon.hackathon_comments?.map((comment: any) => (
+                    {comments.map((comment: any) => (
                       <div key={comment.id} className="bg-white p-4 rounded-lg shadow-sm">
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="font-medium">{comment.profiles.full_name}</p>
+                            <p className="font-medium">{comment.profiles?.full_name}</p>
                             <p className="text-gray-600 text-sm">
                               {new Date(comment.created_at).toLocaleDateString()}
                             </p>
@@ -285,10 +309,6 @@ const HackathonDetails = () => {
               <Button variant="outline" onClick={() => handleShare('linkedin')}>
                 <Linkedin className="h-4 w-4 mr-2" />
                 LinkedIn
-              </Button>
-              <Button variant="outline" onClick={() => handleShare('whatsapp')}>
-                <WhatsApp className="h-4 w-4 mr-2" />
-                WhatsApp
               </Button>
               <Button variant="outline" onClick={() => handleShare('copy')}>
                 <Copy className="h-4 w-4 mr-2" />
