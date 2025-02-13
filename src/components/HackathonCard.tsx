@@ -33,33 +33,33 @@ const HackathonCard = ({ hackathon, onDelete }: HackathonCardProps) => {
   };
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 animate-scale-in">
+    <Card className="group hover:shadow-lg transition-all duration-300 animate-scale-in h-full flex flex-col">
       <CardHeader>
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-xl font-bold">{hackathon.name}</CardTitle>
-          <Badge variant="secondary" className={statusColors[hackathon.status as keyof typeof statusColors]}>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <CardTitle className="text-lg sm:text-xl font-bold line-clamp-2">{hackathon.name}</CardTitle>
+          <Badge variant="secondary" className={`${statusColors[hackathon.status as keyof typeof statusColors]} whitespace-nowrap`}>
             {hackathon.status}
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex-grow space-y-4">
         <div className="space-y-2">
           <div className="flex items-center text-gray-600">
-            <Calendar className="h-4 w-4 mr-2" />
-            <span>{new Date(hackathon.date).toLocaleDateString()}</span>
+            <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
+            <span className="text-sm">{new Date(hackathon.date).toLocaleDateString()}</span>
           </div>
           <div className="flex items-center text-gray-600">
-            <MapPin className="h-4 w-4 mr-2" />
-            <span>{hackathon.location}</span>
+            <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+            <span className="text-sm line-clamp-1">{hackathon.location}</span>
           </div>
           <div className="flex items-center text-gray-600">
-            <Users className="h-4 w-4 mr-2" />
-            <span>{hackathon.current_participants}/{hackathon.max_participants} Participants</span>
+            <Users className="h-4 w-4 mr-2 flex-shrink-0" />
+            <span className="text-sm">{hackathon.current_participants}/{hackathon.max_participants} Participants</span>
           </div>
         </div>
-        <p className="text-gray-600 line-clamp-2">{hackathon.description}</p>
+        <p className="text-gray-600 text-sm line-clamp-3">{hackathon.description}</p>
       </CardContent>
-      <CardFooter className="justify-between space-x-2">
+      <CardFooter className="justify-between space-x-2 mt-auto">
         <Button
           className="flex-1 bg-primary hover:bg-primary-hover text-white transition-colors duration-200"
           onClick={() => alert(`View details of ${hackathon.name}`)}

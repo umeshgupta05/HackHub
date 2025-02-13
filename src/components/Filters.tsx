@@ -24,7 +24,7 @@ const Filters = ({
   skillLevels,
 }: FiltersProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto p-4 animate-fade-in">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full animate-fade-in">
       <div className="space-y-2">
         <label className="text-sm font-medium text-gray-700">Status</label>
         <Select value={selectedStatus} onValueChange={onStatusChange}>

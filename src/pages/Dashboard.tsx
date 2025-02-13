@@ -60,20 +60,22 @@ const Dashboard = () => {
       />
 
       <main className="max-w-7xl mx-auto pt-20 px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-6">
-          <Filters
-            selectedStatus={selectedStatus}
-            selectedSkillLevel={selectedSkillLevel}
-            onStatusChange={setSelectedStatus}
-            onSkillLevelChange={setSelectedSkillLevel}
-            skillLevels={["Beginner", "Intermediate", "Advanced"]}
-          />
+        <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:items-center md:justify-between mb-6">
           <div className="w-full md:w-auto">
+            <Filters
+              selectedStatus={selectedStatus}
+              selectedSkillLevel={selectedSkillLevel}
+              onStatusChange={setSelectedStatus}
+              onSkillLevelChange={setSelectedSkillLevel}
+              skillLevels={["Beginner", "Intermediate", "Advanced"]}
+            />
+          </div>
+          <div className="w-full md:w-48">
             <Input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full md:w-auto"
+              className="w-full"
             />
           </div>
         </div>
