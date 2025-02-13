@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Bell, PlusCircle, Search, User } from 'lucide-react';
+import { Bell, Search, User } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import {
@@ -11,12 +11,13 @@ import {
 } from './ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { AdminMenu } from './dashboard/AdminMenu';
 
 interface NavigationProps {
   onAddHackathon: () => void;
   searchTerm: string;
   onSearchChange: (value: string) => void;
-  notifications: Array<{ id: number; message: string }>;
+  notifications: Array<{ id: string; message: string }>;
   userProfile?: {
     full_name: string;
   };
@@ -60,13 +61,7 @@ const Navigation = ({
           </div>
 
           <div className="flex items-center space-x-4">
-            <Button
-              onClick={onAddHackathon}
-              className="bg-primary hover:bg-primary-hover text-white transition-colors duration-200"
-            >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Hackathon
-            </Button>
+            <AdminMenu onAddHackathon={onAddHackathon} />
 
             <DropdownMenu>
               <DropdownMenuTrigger className="relative">
@@ -92,7 +87,9 @@ const Navigation = ({
             <DropdownMenu>
               <DropdownMenuTrigger>
                 <Button variant="ghost" size="icon">
-                  <User className="h-5 w-5 text-gray-600 hover:text-gray-900 transition-colors" />
+                  <User className="h-5 w-5 text
+
+-gray-600 hover:text-gray-900 transition-colors" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
