@@ -11,6 +11,7 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
+import HackathonDetails from "./pages/HackathonDetails";
 
 const queryClient = new QueryClient();
 
@@ -18,12 +19,10 @@ const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Check current auth status
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
     });
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
@@ -34,7 +33,7 @@ const App = () => {
   }, []);
 
   if (isAuthenticated === null) {
-    return null; // or loading spinner
+    return null;
   }
 
   return (
@@ -59,6 +58,10 @@ const App = () => {
               element={
                 isAuthenticated ? <Dashboard /> : <Navigate to="/auth/login" />
               }
+            />
+            <Route
+              path="/hackathon/:id"
+              element={<HackathonDetails />}
             />
             <Route
               path="/auth/login"

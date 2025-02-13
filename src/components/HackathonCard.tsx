@@ -1,6 +1,8 @@
+
 import React from 'react';
 import { Calendar, MapPin, Users, Trash2, Link as LinkIcon } from 'lucide-react';
 import { Button } from './ui/button';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -27,6 +29,7 @@ interface HackathonCardProps {
 }
 
 const HackathonCard = ({ hackathon, onDelete }: HackathonCardProps) => {
+  const navigate = useNavigate();
   const statusColors = {
     upcoming: 'bg-blue-100 text-blue-800',
     ongoing: 'bg-green-100 text-green-800',
@@ -84,7 +87,7 @@ const HackathonCard = ({ hackathon, onDelete }: HackathonCardProps) => {
       <CardFooter className="justify-between space-x-2 mt-auto">
         <Button
           className="flex-1 bg-primary hover:bg-primary-hover text-white transition-colors duration-200"
-          onClick={() => alert(`View details of ${hackathon.name}`)}
+          onClick={() => navigate(`/hackathon/${hackathon.id}`)}
         >
           View Details
         </Button>
