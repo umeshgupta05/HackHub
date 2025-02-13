@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, MapPin, Users, Trash2, Link as LinkIcon } from 'lucide-react';
+import { Calendar, MapPin, Users, Trash2, Link as LinkIcon, Trophy, Clock } from 'lucide-react';
 import { Button } from './ui/button';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -24,6 +24,9 @@ interface HackathonCardProps {
     status: string;
     image_url?: string;
     website_url?: string;
+    prize_pool?: number;
+    registration_deadline?: string;
+    technologies?: string[];
   };
   onDelete: (id: string) => void;
 }
@@ -34,6 +37,13 @@ const HackathonCard = ({ hackathon, onDelete }: HackathonCardProps) => {
     upcoming: 'bg-blue-100 text-blue-800',
     ongoing: 'bg-green-100 text-green-800',
     completed: 'bg-gray-100 text-gray-800',
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
   };
 
   return (
@@ -81,8 +91,29 @@ const HackathonCard = ({ hackathon, onDelete }: HackathonCardProps) => {
             <Users className="h-4 w-4 mr-2 flex-shrink-0" />
             <span className="text-sm">{hackathon.current_participants}/{hackathon.max_participants} Participants</span>
           </div>
+          {hackathon.prize_pool && (
+            <div className="flex items-center text-gray-600">
+              <Trophy className="h-4 w-4 mr-2 flex-shrink-0" />
+              <span className="text-sm">{formatCurrency(hackathon.prize_pool)} Prize Pool</span>
+            </div>
+          )}
+          {hackathon.registration_deadline && (
+            <div className="flex items-center text-gray-600">
+              <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
+              <span className="text-sm">Registration ends: {new Date(hackathon.registration_deadline).toLocaleDateString()}</span>
+            </div>
+          )}
         </div>
         <p className="text-gray-600 text-sm line-clamp-3">{hackathon.description}</p>
+        {hackathon.technologies && hackathon.technologies.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {hackathon.technologies.map((tech, index) => (
+              <Badge key={index} variant="outline" className="text-xs">
+                {tech}
+              </Badge>
+            ))}
+          </div>
+        )}
       </CardContent>
       <CardFooter className="justify-between space-x-2 mt-auto">
         <Button

@@ -12,6 +12,21 @@ interface Hackathon {
   current_participants: number;
   description: string;
   status: string;
+  created_by: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  college_name?: string;
+  coordinator_name?: string;
+  coordinator_email?: string;
+  coordinator_phone?: string;
+  skill_level?: string;
+  team_size_min?: number;
+  team_size_max?: number;
+  registration_deadline?: string;
+  prize_pool?: number;
+  technologies?: string[];
+  image_url?: string;
+  website_url?: string;
 }
 
 export const useHackathons = () => {
@@ -23,22 +38,32 @@ export const useHackathons = () => {
   const [selectedDate, setSelectedDate] = useState("");
 
   const fetchHackathons = async () => {
-    const { data, error } = await supabase
-      .from("hackathons")
-      .select("*")
-      .order("date", { ascending: true });
+    try {
+      const { data, error } = await supabase
+        .from("hackathons")
+        .select("*")
+        .order("date", { ascending: true });
 
-    if (error) {
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to fetch hackathons",
+        });
+      } else {
+        setHackathons(data || []);
+        setFilteredHackathons(data || []);
+      }
+    } catch (error: any) {
+      console.error("Error fetching hackathons:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch hackathons",
+        description: "An unexpected error occurred",
       });
-    } else {
-      setHackathons(data || []);
-      setFilteredHackathons(data || []);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleDeleteHackathon = async (id: string) => {
@@ -51,6 +76,8 @@ export const useHackathons = () => {
       if (error) throw error;
 
       setHackathons(hackathons.filter((h) => h.id !== id));
+      setFilteredHackathons(filteredHackathons.filter((h) => h.id !== id));
+      
       toast({
         title: "Success",
         description: "Hackathon deleted successfully",
@@ -85,12 +112,20 @@ export const useHackathons = () => {
         hackathon =>
           hackathon.name.toLowerCase().includes(searchLower) ||
           hackathon.description.toLowerCase().includes(searchLower) ||
-          hackathon.location.toLowerCase().includes(searchLower)
+          hackathon.location.toLowerCase().includes(searchLower) ||
+          (hackathon.college_name && hackathon.college_name.toLowerCase().includes(searchLower)) ||
+          (hackathon.technologies && hackathon.technologies.some(tech => 
+            tech.toLowerCase().includes(searchLower)
+          ))
       );
     }
 
     setFilteredHackathons(filtered);
   }, [hackathons, selectedStatus, selectedDate, searchTerm]);
+
+  useEffect(() => {
+    fetchHackathons();
+  }, []);
 
   return {
     hackathons: filteredHackathons,
