@@ -32,6 +32,17 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 
+interface HackathonComment {
+  id: string;
+  hackathon_id: string;
+  user_id: string;
+  comment: string;
+  created_at: string;
+  profiles?: {
+    full_name: string | null;
+  };
+}
+
 const HackathonDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -53,7 +64,7 @@ const HackathonDetails = () => {
   });
 
   // Fetch comments separately
-  const { data: comments = [] } = useQuery({
+  const { data: comments = [], refetch: refetchComments } = useQuery<HackathonComment[]>({
     queryKey: ['hackathon-comments', id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -141,6 +152,7 @@ const HackathonDetails = () => {
     }
 
     setComment('');
+    await refetchComments();
     toast({
       title: 'Success',
       description: 'Comment posted successfully!',
@@ -283,7 +295,7 @@ const HackathonDetails = () => {
                   </div>
                   
                   <div className="space-y-4">
-                    {comments.map((comment: any) => (
+                    {comments.map((comment) => (
                       <div key={comment.id} className="bg-white p-4 rounded-lg shadow-sm">
                         <div className="flex justify-between items-start">
                           <div>

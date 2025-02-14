@@ -9,6 +9,41 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      hackathon_comments: {
+        Row: {
+          comment: string
+          created_at: string | null
+          hackathon_id: string | null
+          id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          comment: string
+          created_at?: string | null
+          hackathon_id?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          comment?: string
+          created_at?: string | null
+          hackathon_id?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hackathon_comments_hackathon_id_fkey"
+            columns: ["hackathon_id"]
+            isOneToOne: false
+            referencedRelation: "hackathons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hackathons: {
         Row: {
           college_name: string | null
@@ -20,6 +55,7 @@ export type Database = {
           current_participants: number | null
           date: string
           description: string
+          eligibility_criteria: string | null
           id: string
           image_url: string | null
           location: string
@@ -27,6 +63,7 @@ export type Database = {
           name: string
           prize_pool: number | null
           registration_deadline: string | null
+          rules: string | null
           skill_level: string | null
           status: string
           team_size_max: number | null
@@ -45,6 +82,7 @@ export type Database = {
           current_participants?: number | null
           date: string
           description: string
+          eligibility_criteria?: string | null
           id?: string
           image_url?: string | null
           location: string
@@ -52,6 +90,7 @@ export type Database = {
           name: string
           prize_pool?: number | null
           registration_deadline?: string | null
+          rules?: string | null
           skill_level?: string | null
           status?: string
           team_size_max?: number | null
@@ -70,6 +109,7 @@ export type Database = {
           current_participants?: number | null
           date?: string
           description?: string
+          eligibility_criteria?: string | null
           id?: string
           image_url?: string | null
           location?: string
@@ -77,6 +117,7 @@ export type Database = {
           name?: string
           prize_pool?: number | null
           registration_deadline?: string | null
+          rules?: string | null
           skill_level?: string | null
           status?: string
           team_size_max?: number | null
