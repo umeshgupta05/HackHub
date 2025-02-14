@@ -11,43 +11,79 @@ export type Database = {
     Tables: {
       hackathons: {
         Row: {
+          college_name: string | null
+          coordinator_email: string | null
+          coordinator_name: string | null
+          coordinator_phone: string | null
           created_at: string | null
           created_by: string | null
           current_participants: number | null
           date: string
           description: string
           id: string
+          image_url: string | null
           location: string
           max_participants: number
           name: string
+          prize_pool: number | null
+          registration_deadline: string | null
+          skill_level: string | null
           status: string
+          team_size_max: number | null
+          team_size_min: number | null
+          technologies: string[] | null
           updated_at: string | null
+          website_url: string | null
         }
         Insert: {
+          college_name?: string | null
+          coordinator_email?: string | null
+          coordinator_name?: string | null
+          coordinator_phone?: string | null
           created_at?: string | null
           created_by?: string | null
           current_participants?: number | null
           date: string
           description: string
           id?: string
+          image_url?: string | null
           location: string
           max_participants: number
           name: string
+          prize_pool?: number | null
+          registration_deadline?: string | null
+          skill_level?: string | null
           status?: string
+          team_size_max?: number | null
+          team_size_min?: number | null
+          technologies?: string[] | null
           updated_at?: string | null
+          website_url?: string | null
         }
         Update: {
+          college_name?: string | null
+          coordinator_email?: string | null
+          coordinator_name?: string | null
+          coordinator_phone?: string | null
           created_at?: string | null
           created_by?: string | null
           current_participants?: number | null
           date?: string
           description?: string
           id?: string
+          image_url?: string | null
           location?: string
           max_participants?: number
           name?: string
+          prize_pool?: number | null
+          registration_deadline?: string | null
+          skill_level?: string | null
           status?: string
+          team_size_max?: number | null
+          team_size_min?: number | null
+          technologies?: string[] | null
           updated_at?: string | null
+          website_url?: string | null
         }
         Relationships: []
       }
