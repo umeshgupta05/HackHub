@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import User from "@/models/User"; // Import Mongoose User model
 import AuthLayout from "./AuthLayout";
 
 const Login = () => {
@@ -21,24 +20,36 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
+      // In a real application, this would be an API call to your backend
+      // which would then use Mongoose to verify credentials.
+      // For demonstration, we simulate direct Mongoose interaction (not recommended for client-side).
+      const user = await User.findOne({ email: formData.email });
 
-      if (error) throw error;
+      if (!user) {
+        throw new Error("Invalid credentials");
+      }
+
+      const isMatch = await user.comparePassword(formData.password);
+
+      if (!isMatch) {
+        throw new Error("Invalid credentials");
+      }
 
       toast({
         title: "Welcome back!",
         description: "You have successfully logged in.",
       });
       
+      // In a real app, you'd receive and store a token (e.g., JWT) here.
+      localStorage.setItem('authToken', 'mock-auth-token'); // Placeholder
+      localStorage.setItem('userId', user._id.toString()); // Store user ID
+
       navigate("/dashboard");
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: error.message,
+        description: error.message || "An unexpected error occurred.",
       });
     } finally {
       setLoading(false);

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import Filters from '@/components/Filters';
@@ -9,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion'; // Import motion
 
 interface Hackathon {
   id: string;
@@ -20,6 +20,23 @@ interface Hackathon {
   description: string;
   status: string;
 }
+
+// Define container variants for staggered animation in the grid
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+// Define item variants for individual hackathon cards
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+};
 
 const Index = () => {
   const [hackathons, setHackathons] = useState<Hackathon[]>([]);
@@ -140,21 +157,30 @@ const Index = () => {
       />
 
       <main className="max-w-7xl mx-auto pt-20 px-4 sm:px-6 lg:px-8">
-        <Filters
-          selectedStatus={selectedStatus}
-          selectedSkillLevel={selectedSkillLevel}
-          onStatusChange={setSelectedStatus}
-          onSkillLevelChange={setSelectedSkillLevel}
-          skillLevels={skillLevels}
-        />
-        <div className="w-full md:w-auto">
-          <Input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="w-full md:w-auto"
-          />
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:items-center md:justify-between mb-6"
+        >
+          <div className="w-full md:w-auto">
+            <Filters
+              selectedStatus={selectedStatus}
+              selectedSkillLevel={selectedSkillLevel}
+              onStatusChange={setSelectedStatus}
+              onSkillLevelChange={setSelectedSkillLevel}
+              skillLevels={skillLevels}
+            />
+          </div>
+          <div className="w-full md:w-auto">
+            <Input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="w-full md:w-auto"
+            />
+          </div>
+        </motion.div>
 
         {loading ? (
           <div className="flex justify-center items-center min-h-[400px]">
@@ -163,19 +189,30 @@ const Index = () => {
         ) : (
           <>
             {filteredHackathons.length === 0 ? (
-              <div className="text-center py-12">
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="text-center py-12"
+              >
                 <p className="text-gray-500">No hackathons found matching your criteria.</p>
-              </div>
+              </motion.div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 py-8">
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 py-8"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
                 {filteredHackathons.map((hackathon) => (
-                  <HackathonCard
-                    key={hackathon.id}
-                    hackathon={hackathon}
-                    onDelete={handleDeleteHackathon}
-                  />
+                  <motion.div key={hackathon.id} variants={itemVariants}>
+                    <HackathonCard
+                      hackathon={hackathon}
+                      onDelete={handleDeleteHackathon}
+                    />
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             )}
           </>
         )}
@@ -183,54 +220,61 @@ const Index = () => {
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Add New Hackathon</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Name</label>
-              <Input
-                value={newHackathon.name}
-                onChange={(e) => setNewHackathon({ ...newHackathon, name: e.target.value })}
-              />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.3 }}
+          >
+            <DialogHeader>
+              <DialogTitle>Add New Hackathon</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Name</label>
+                <Input
+                  value={newHackathon.name}
+                  onChange={(e) => setNewHackathon({ ...newHackathon, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Date</label>
+                <Input
+                  type="date"
+                  value={newHackathon.date}
+                  onChange={(e) => setNewHackathon({ ...newHackathon, date: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Location</label>
+                <Input
+                  value={newHackathon.location}
+                  onChange={(e) => setNewHackathon({ ...newHackathon, location: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Max Participants</label>
+                <Input
+                  type="number"
+                  value={newHackathon.max_participants}
+                  onChange={(e) => setNewHackathon({ ...newHackathon, max_participants: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Description</label>
+                <Textarea
+                  value={newHackathon.description}
+                  onChange={(e) => setNewHackathon({ ...newHackathon, description: e.target.value })}
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Date</label>
-              <Input
-                type="date"
-                value={newHackathon.date}
-                onChange={(e) => setNewHackathon({ ...newHackathon, date: e.target.value })}
-              />
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setFormOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleFormSubmit}>Submit</Button>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Location</label>
-              <Input
-                value={newHackathon.location}
-                onChange={(e) => setNewHackathon({ ...newHackathon, location: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Max Participants</label>
-              <Input
-                type="number"
-                value={newHackathon.max_participants}
-                onChange={(e) => setNewHackathon({ ...newHackathon, max_participants: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Description</label>
-              <Textarea
-                value={newHackathon.description}
-                onChange={(e) => setNewHackathon({ ...newHackathon, description: e.target.value })}
-              />
-            </div>
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setFormOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleFormSubmit}>Submit</Button>
-          </div>
+          </motion.div>
         </DialogContent>
       </Dialog>
     </div>

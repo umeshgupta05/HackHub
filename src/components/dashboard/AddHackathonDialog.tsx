@@ -3,9 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { Upload } from "lucide-react";
+import Hackathon from "@/models/Hackathon"; // Import Mongoose Hackathon model
 
 interface AddHackathonDialogProps {
   open: boolean;
@@ -29,7 +28,6 @@ interface NewHackathon {
   registrationDeadline: string;
   prizePool: string;
   technologies: string;
-  imageFile: File | null;
   websiteUrl: string;
 }
 
@@ -50,10 +48,8 @@ export const AddHackathonDialog = ({ open, onOpenChange, onHackathonAdded }: Add
     registrationDeadline: "",
     prizePool: "",
     technologies: "",
-    imageFile: null,
     websiteUrl: "",
   });
-  const [imagePreview, setImagePreview] = useState<string>("");
 
   const validateForm = () => {
     const requiredFields = [
@@ -85,50 +81,22 @@ export const AddHackathonDialog = ({ open, onOpenChange, onHackathonAdded }: Add
     return true;
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setNewHackathon({ ...newHackathon, imageFile: file });
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleFormSubmit = async () => {
     if (!validateForm()) return;
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      // For now, hardcoding organizer_id. In a real app, this would come from the authenticated user.
+      // A proper authentication system with Mongoose would provide the user's ID here.
+      const organizerId = "60c72b2f9b1d8e001c8a1b2e"; // Example ObjectId - replace with actual user ID
 
-      let imageUrl = "";
-      if (newHackathon.imageFile) {
-        const fileExt = newHackathon.imageFile.name.split('.').pop();
-        const filePath = `${crypto.randomUUID()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('hackathon-images')
-          .upload(filePath, newHackathon.imageFile);
-
-        if (uploadError) throw uploadError;
-
-        const { data } = supabase.storage
-          .from('hackathon-images')
-          .getPublicUrl(filePath);
-
-        imageUrl = data.publicUrl;
-      }
-
-      const { error } = await supabase.from("hackathons").insert([{
+      await Hackathon.create({
         name: newHackathon.name,
         date: newHackathon.date,
         location: newHackathon.location,
         max_participants: parseInt(newHackathon.maxParticipants),
         description: newHackathon.description,
-        created_by: user.id,
+        // created_by: user.id, // Replaced with organizer_id for Mongoose
+        organizer_id: organizerId,
         college_name: newHackathon.collegeName,
         coordinator_name: newHackathon.coordinatorName,
         coordinator_email: newHackathon.coordinatorEmail,
@@ -139,11 +107,9 @@ export const AddHackathonDialog = ({ open, onOpenChange, onHackathonAdded }: Add
         registration_deadline: newHackathon.registrationDeadline,
         prize_pool: parseFloat(newHackathon.prizePool) || 0,
         technologies: newHackathon.technologies.split(",").map(t => t.trim()).filter(t => t),
-        image_url: imageUrl,
+        // image_url: imageUrl, // Removed image upload for now
         website_url: newHackathon.websiteUrl,
-      }]);
-
-      if (error) throw error;
+      });
 
       onOpenChange(false);
       toast({
@@ -170,7 +136,6 @@ export const AddHackathonDialog = ({ open, onOpenChange, onHackathonAdded }: Add
         registrationDeadline: "",
         prizePool: "",
         technologies: "",
-        imageFile: null,
         websiteUrl: "",
       });
     } catch (error: any) {
@@ -326,36 +291,7 @@ export const AddHackathonDialog = ({ open, onOpenChange, onHackathonAdded }: Add
               placeholder="https://example.com"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Event Image</label>
-              <div className="flex items-center space-x-4">
-                <div className="flex-1">
-                  <label 
-                    className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50"
-                  >
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                    />
-                    <Upload className="h-4 w-4 mr-2" />
-                    Choose Image
-                  </label>
-                </div>
-                {imagePreview && (
-                  <div className="h-16 w-16 relative">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="h-full w-full object-cover rounded-md"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          {/* Removed image upload section for now */}
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Description*</label>

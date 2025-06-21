@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import User from "@/models/User"; // Import Mongoose User model
 import AuthLayout from "./AuthLayout";
 
 const Register = () => {
@@ -52,31 +51,29 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName,
-          },
-        },
-      });
-
-      if (error) throw error;
-
-      if (data?.user?.identities?.length === 0) {
+      // Check if user already exists
+      const existingUser = await User.findOne({ email: formData.email });
+      if (existingUser) {
         toast({
           variant: "destructive",
           title: "Registration failed",
           description: "An account with this email already exists.",
         });
+        setLoading(false);
         return;
       }
 
+      // Create new user using Mongoose model
+      await User.create({
+        email: formData.email,
+        password_hash: formData.password, // Mongoose pre-save hook will hash this
+        full_name: formData.fullName, // Assuming full_name is added to the User model if needed
+      });
+
       toast({
         title: "Registration successful!",
-        description: "Please check your email to verify your account before logging in.",
-        duration: 6000,
+        description: "You can now log in with your new account.",
+        duration: 3000,
       });
       
       // Clear the form
@@ -94,7 +91,7 @@ const Register = () => {
       toast({
         variant: "destructive",
         title: "Registration failed",
-        description: error.message,
+        description: error.message || "An unexpected error occurred.",
       });
     } finally {
       setLoading(false);

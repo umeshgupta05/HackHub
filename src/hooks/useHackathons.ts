@@ -1,20 +1,20 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import Hackathon from "@/models/Hackathon"; // Import the Mongoose Hackathon model
 import { toast } from "@/components/ui/use-toast";
 
-interface Hackathon {
+interface HackathonType { // Renamed to avoid conflict with Mongoose model
   id: string;
   name: string;
   date: string;
   location: string;
-  max_participants: number;
-  current_participants: number;
+  max_participants?: number;
+  current_participants?: number;
   description: string;
-  status: string;
-  created_by: string | null;
-  created_at: string | null;
-  updated_at: string | null;
+  status?: string;
+  created_by?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
   college_name?: string;
   coordinator_name?: string;
   coordinator_email?: string;
@@ -30,8 +30,8 @@ interface Hackathon {
 }
 
 export const useHackathons = () => {
-  const [hackathons, setHackathons] = useState<Hackathon[]>([]);
-  const [filteredHackathons, setFilteredHackathons] = useState<Hackathon[]>([]);
+  const [hackathons, setHackathons] = useState<HackathonType[]>([]);
+  const [filteredHackathons, setFilteredHackathons] = useState<HackathonType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
@@ -39,27 +39,17 @@ export const useHackathons = () => {
 
   const fetchHackathons = async () => {
     try {
-      const { data, error } = await supabase
-        .from("hackathons")
-        .select("*")
-        .order("date", { ascending: true });
+      // Mongoose query to fetch hackathons
+      const data = await Hackathon.find().sort({ date: 1 });
 
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to fetch hackathons",
-        });
-      } else {
-        setHackathons(data || []);
-        setFilteredHackathons(data || []);
-      }
+      setHackathons(data.map(doc => ({ ...doc.toObject(), id: doc._id.toString() })) || []);
+      setFilteredHackathons(data.map(doc => ({ ...doc.toObject(), id: doc._id.toString() })) || []);
     } catch (error: any) {
       console.error("Error fetching hackathons:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "An unexpected error occurred",
+        description: "Failed to fetch hackathons",
       });
     } finally {
       setLoading(false);
@@ -68,12 +58,10 @@ export const useHackathons = () => {
 
   const handleDeleteHackathon = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from("hackathons")
-        .delete()
-        .eq("id", id);
+      // Mongoose query to delete a hackathon
+      const result = await Hackathon.findByIdAndDelete(id);
 
-      if (error) throw error;
+      if (!result) throw new Error("Hackathon not found");
 
       setHackathons(hackathons.filter((h) => h.id !== id));
       setFilteredHackathons(filteredHackathons.filter((h) => h.id !== id));

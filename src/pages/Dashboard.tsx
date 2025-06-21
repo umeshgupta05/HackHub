@@ -1,19 +1,17 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import { Input } from "@/components/ui/input";
 import Filters from "@/components/Filters";
 import { useHackathons } from "@/hooks/useHackathons";
 import { HackathonGrid } from "@/components/dashboard/HackathonGrid";
 import { AddHackathonDialog } from "@/components/dashboard/AddHackathonDialog";
+import { motion } from "framer-motion"; // Import motion
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [formOpen, setFormOpen] = useState(false);
   const [notifications] = useState([]);
+  const [formOpen, setFormOpen] = useState(false);
   const [selectedSkillLevel, setSelectedSkillLevel] = useState("all");
 
   const {
@@ -29,26 +27,6 @@ const Dashboard = () => {
     fetchHackathons,
   } = useHackathons();
 
-  useEffect(() => {
-    const getUserProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate("/auth/login");
-        return;
-      }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      setUserProfile(profile);
-    };
-
-    getUserProfile();
-  }, [navigate]);
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation
@@ -56,11 +34,15 @@ const Dashboard = () => {
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         notifications={notifications}
-        userProfile={userProfile}
       />
 
       <main className="max-w-7xl mx-auto pt-20 px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:items-center md:justify-between mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:items-center md:justify-between mb-6"
+        >
           <div className="w-full md:w-auto">
             <Filters
               selectedStatus={selectedStatus}
@@ -78,7 +60,7 @@ const Dashboard = () => {
               className="w-full"
             />
           </div>
-        </div>
+        </motion.div>
 
         <HackathonGrid
           loading={loading}

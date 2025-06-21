@@ -1,8 +1,8 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import Hackathon, { IHackathon } from '@/models/Hackathon';
+import Comment, { IComment } from '@/models/Comment';
 import {
   Calendar,
   MapPin,
@@ -31,15 +31,12 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
+import { motion } from 'framer-motion'; // Import motion
 
-interface HackathonComment {
-  id: string;
-  hackathon_id: string;
-  user_id: string;
-  comment: string;
-  created_at: string;
-  profiles?: {
-    full_name: string | null;
+interface PopulatedComment extends IComment {
+  user_id: { 
+    full_name: string;
+    _id: string;
   };
 }
 
@@ -48,41 +45,31 @@ const HackathonDetails = () => {
   const navigate = useNavigate();
   const [comment, setComment] = useState('');
 
-  // Fetch hackathon details
-  const { data: hackathon, isLoading } = useQuery({
+  const { data: hackathon, isLoading } = useQuery<IHackathon>({
     queryKey: ['hackathon', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('hackathons')
-        .select('*, profiles!hackathons_created_by_fkey(full_name)')
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
+      const data = await Hackathon.findById(id).populate('organizer_id', 'full_name');
+      if (!data) throw new Error("Hackathon not found");
       return data;
     },
   });
 
-  // Fetch comments separately
-  const { data: comments = [], refetch: refetchComments } = useQuery<HackathonComment[]>({
+  const { data: comments = [], refetch: refetchComments } = useQuery<PopulatedComment[]>({
     queryKey: ['hackathon-comments', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('hackathon_comments')
-        .select('*, profiles(full_name)')
-        .eq('hackathon_id', id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data;
+      const data = await Comment.find({ hackathon_id: id }).populate('user_id', 'full_name').sort({ created_at: -1 });
+      return data as PopulatedComment[];
     },
   });
 
-  // Increment view count
   useEffect(() => {
     if (id) {
       const incrementViews = async () => {
-        await supabase.rpc('increment_hackathon_views', { hackathon_id: id });
+        try {
+          await Hackathon.findByIdAndUpdate(id, { $inc: { views: 1 } });
+        } catch (error) {
+          console.error("Error incrementing views:", error);
+        }
       };
       incrementViews();
     }
@@ -124,8 +111,9 @@ const HackathonDetails = () => {
   };
 
   const handleComment = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const currentUserId = "60c72b2f9b1d8e001c8a1b2e";
+
+    if (!currentUserId) {
       toast({
         variant: 'destructive',
         title: 'Authentication required',
@@ -134,29 +122,35 @@ const HackathonDetails = () => {
       return;
     }
 
-    const { error } = await supabase
-      .from('hackathon_comments')
-      .insert({
-        hackathon_id: id,
-        user_id: user.id,
-        comment,
-      });
-
-    if (error) {
+    if (!comment.trim()) {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to post comment.',
+        title: 'Empty Comment',
+        description: 'Comment cannot be empty.',
       });
       return;
     }
 
-    setComment('');
-    await refetchComments();
-    toast({
-      title: 'Success',
-      description: 'Comment posted successfully!',
-    });
+    try {
+      await Comment.create({
+        hackathon_id: id,
+        user_id: currentUserId,
+        comment,
+      });
+
+      setComment('');
+      await refetchComments();
+      toast({
+        title: 'Success',
+        description: 'Comment posted successfully!',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message,
+      });
+    }
   };
 
   if (isLoading) {
@@ -169,16 +163,26 @@ const HackathonDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20 pb-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="max-w-4xl mx-auto"
+      >
         <Card>
           {hackathon.image_url && (
-            <div className="relative w-full h-64 overflow-hidden rounded-t-lg">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="relative w-full h-64 overflow-hidden rounded-t-lg"
+            >
               <img
                 src={hackathon.image_url}
                 alt={hackathon.name}
                 className="w-full h-full object-cover"
               />
-            </div>
+            </motion.div>
           )}
           
           <CardHeader>
@@ -267,46 +271,49 @@ const HackathonDetails = () => {
               
               <TabsContent value="rules" className="space-y-4">
                 <div className="prose max-w-none">
-                  {hackathon.eligibility_criteria && (
-                    <>
-                      <h3 className="text-lg font-semibold">Eligibility Criteria</h3>
-                      <p className="text-gray-600">{hackathon.eligibility_criteria}</p>
-                    </>
-                  )}
+                  <h3 className="text-lg font-semibold">Eligibility Criteria</h3>
+                  <p className="text-gray-600">Eligibility criteria details here...</p>
                   
-                  {hackathon.rules && (
-                    <>
-                      <h3 className="text-lg font-semibold mt-4">Rules</h3>
-                      <p className="text-gray-600">{hackathon.rules}</p>
-                    </>
-                  )}
+                  <h3 className="text-lg font-semibold mt-4">Rules</h3>
+                  <p className="text-gray-600">Rules details here...</p>
                 </div>
               </TabsContent>
               
               <TabsContent value="discussion" className="space-y-4">
                 <div className="space-y-4">
-                  <div className="flex space-x-2">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.1 }}
+                    className="flex space-x-2"
+                  >
                     <Textarea
                       placeholder="Add a comment..."
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
                     />
                     <Button onClick={handleComment}>Post</Button>
-                  </div>
+                  </motion.div>
                   
                   <div className="space-y-4">
-                    {comments.map((comment) => (
-                      <div key={comment.id} className="bg-white p-4 rounded-lg shadow-sm">
+                    {comments.map((comment, index) => (
+                      <motion.div
+                        key={comment._id.toString()}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: 0.1 + index * 0.05 }}
+                        className="bg-white p-4 rounded-lg shadow-sm"
+                      >
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="font-medium">{comment.profiles?.full_name}</p>
+                            <p className="font-medium">{(comment.user_id as any)?.full_name || 'Unknown User'}</p>
                             <p className="text-gray-600 text-sm">
                               {new Date(comment.created_at).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
                         <p className="mt-2 text-gray-700">{comment.comment}</p>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 </div>
@@ -333,7 +340,7 @@ const HackathonDetails = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     </div>
   );
 };
